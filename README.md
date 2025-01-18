@@ -20,7 +20,7 @@ The People Puzzle Collective isn't just a brand—it's a movement. We’re creat
 I’m passionate about creating ethical, human-centered solutions in talent acquisition and DEIB. Whether you’re here to collaborate, brainstorm, or join the Collective, I’d love to hear from you!
 
 ### 🚀 Stay Connected
-- **Newsletter**: [The People Puzzle Collective](https://www.thepeoplepuzzlecollective.com)
+- **Newsletter**: [The People Puzzle Collective](https://www.peoplepuzzles.io
 - **LinkedIn**: [Jackye Clayton](https://www.linkedin.com/in/jackyeclayton/)
 - **Podcasts**: [Inclusive AF Podcast](https://inclusiveafpodcast.com)
 
