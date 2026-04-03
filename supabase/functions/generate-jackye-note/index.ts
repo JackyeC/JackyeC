@@ -65,10 +65,20 @@ function buildContextMessage(context: {
     .trim();
 }
 
-async function requestModelDraft(userMessage: string): Promise<string | null> {
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!apiKey) return null;
+const userMessage = buildContextMessage(context);
+const aiDraft = await deps.requestDraft(userMessage);
 
+if (!aiDraft) {
+  return generateTemplateNote();
+}
+
+const sanitized = sanitizeNote(aiDraft);
+
+if (!validateNote(sanitized)) {
+  return generateTemplateNote();
+}
+
+return sanitized;
   const model = Deno.env.get("OPENAI_MODEL") ?? "gpt-4o-mini";
 
   try {
