@@ -50,6 +50,56 @@ function generateTemplateNote(seed = new Date().getUTCDate()): string {
   return options[seed % options.length];
 }
 
+function buildContextMessage(context: {
+  headline?: string;
+  summary?: string;
+  industry?: string;
+  company?: string;
+  values?: string[];
+}): string {
+  const values = (context.values ?? []).filter(Boolean).join(", ");
+
+  return [context.headline, context.summary, context.industry, context.company, values]
+    .filter((part): part is string => Boolean(part && part.trim()))
+    .join("\n")
+    .trim();
+}
+
+async function requestModelDraft(userMessage: string): Promise<string | null> {
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) return null;
+
+  const model = Deno.env.get("OPENAI_MODEL") ?? "gpt-4o-mini";
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.4,
+        max_tokens: 260,
+        messages: [
+          { role: "system", content: JRC_DAILY_NOTE_PROMPT },
+          { role: "user", content: userMessage || "No context provided." },
+        ],
+      }),
+    });
+
+    if (!response.ok) return null;
+
+    const payload = await response.json();
+    const draft = payload?.choices?.[0]?.message?.content;
+
+    return typeof draft === "string" && draft.trim().length > 0 ? draft : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function generateJackyeNote(context: {
   headline?: string;
   summary?: string;
@@ -57,16 +107,13 @@ export async function generateJackyeNote(context: {
   company?: string;
   values?: string[];
 }): Promise<string> {
-  const userMessage = [
-    `Headline: ${context.headline ?? "N/A"}`,
-    `Summary: ${context.summary ?? "N/A"}`,
-    `Industry: ${context.industry ?? "N/A"}`,
-    `Company: ${context.company ?? "N/A"}`,
-    `Values: ${(context.values ?? []).join(", ") || "N/A"}`,
-  ].join("\n");
+  const userMessage = buildContextMessage(context);
+  const aiDraft = await requestModelDraft(userMessage);
 
-  // Placeholder for provider call; replace with your model invocation.
-  const aiDraft = `${JRC_DAILY_NOTE_PROMPT}\n\n${userMessage}`;
+  if (!aiDraft) {
+    return generateTemplateNote();
+  }
+
   const sanitized = sanitizeNote(aiDraft);
 
   if (!validateNote(sanitized)) {
@@ -76,4 +123,4 @@ export async function generateJackyeNote(context: {
   return sanitized;
 }
 
-export { sanitizeNote, validateNote, generateTemplateNote };
+export { sanitizeNote, validateNote, generateTemplateNote, buildContextMessage, requestModelDraft };
