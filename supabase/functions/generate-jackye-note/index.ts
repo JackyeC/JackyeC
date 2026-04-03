@@ -100,15 +100,21 @@ async function requestModelDraft(userMessage: string): Promise<string | null> {
   }
 }
 
-export async function generateJackyeNote(context: {
-  headline?: string;
-  summary?: string;
-  industry?: string;
-  company?: string;
-  values?: string[];
-}): Promise<string> {
+export async function generateJackyeNote(
+  context: {
+    headline?: string;
+    summary?: string;
+    industry?: string;
+    company?: string;
+    values?: string[];
+  },
+  options?: {
+    requestDraft?: (userMessage: string) => Promise<string | null>;
+  },
+): Promise<string> {
   const userMessage = buildContextMessage(context);
-  const aiDraft = await requestModelDraft(userMessage);
+  const requestDraft = options?.requestDraft ?? requestModelDraft;
+  const aiDraft = await requestDraft(userMessage);
 
   if (!aiDraft) {
     return generateTemplateNote();
